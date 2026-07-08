@@ -22,3 +22,4 @@ CHANGES.md
 Dockerfile
 .dockerignore
 .editorconfig
+bootstrap/cache/*.php
