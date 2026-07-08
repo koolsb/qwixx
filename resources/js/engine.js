@@ -1,0 +1,174 @@
+/*
+ * Pure Qwixx rules engine. Every function takes plain JSON-safe data and
+ * returns new data — no DOM, no Alpine, no storage. The layout shape comes
+ * from Layout::toClientArray():
+ *
+ *   { id, rows: [{ lock: 'red', cells: [{ n: 2, c: 'red' }, ...11] }, ...4] }
+ *
+ * Game state (persisted to localStorage by the UI layer):
+ *
+ *   { layout, mode: 'solo'|'duo', players: [{ rows: [{ crosses: [pos...],
+ *     locked, closed }, ...4], penalties }] }
+ *
+ * `crosses` holds crossed positions (0-10) ascending. `locked` means this
+ * player crossed position 10 themselves (earning the bonus lock mark);
+ * `closed` means the row was manually marked as locked by a player outside
+ * this device. Everything else is derived.
+ */
+
+export const LAST_POS = 10;
+export const CROSSES_TO_LOCK = 5;
+export const MAX_PENALTIES = 4;
+export const PENALTY_POINTS = 5;
+export const SCORE_TABLE = [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78];
+export const COLORS = ['red', 'yellow', 'green', 'blue'];
+
+export function newGame(layoutId, mode) {
+    const players = mode === 'duo' ? 2 : 1;
+
+    return {
+        layout: layoutId,
+        mode,
+        players: Array.from({ length: players }, () => ({
+            rows: Array.from({ length: 4 }, () => ({ crosses: [], locked: false, closed: false })),
+            penalties: 0,
+        })),
+    };
+}
+
+function rowState(state, player, row) {
+    return state.players[player].rows[row];
+}
+
+function rightmost(rowSt) {
+    return rowSt.crosses.length ? rowSt.crosses[rowSt.crosses.length - 1] : -1;
+}
+
+/* A row is locked table-wide when any player on this device crossed its
+ * lock, or a player marked it closed by someone off-device. */
+export function isRowLockedForAll(state, row) {
+    return state.players.some((p) => p.rows[row].locked || p.rows[row].closed);
+}
+
+/* Closed for this player: own lock/manual close, or (duo) the partner
+ * locked it. Derived, so un-crossing a lock reopens the partner's row. */
+export function isRowClosedFor(state, player, row) {
+    const own = rowState(state, player, row);
+
+    return own.locked || own.closed || state.players.some((p, i) => i !== player && p.rows[row].locked);
+}
+
+export function lockedRowCount(state) {
+    let count = 0;
+
+    for (let row = 0; row < 4; row++) {
+        if (isRowLockedForAll(state, row)) count++;
+    }
+
+    return count;
+}
+
+export function isGameOver(state) {
+    return lockedRowCount(state) >= 2 || state.players.some((p) => p.penalties >= MAX_PENALTIES);
+}
+
+export function canCross(state, player, row, pos) {
+    const rowSt = rowState(state, player, row);
+
+    if (pos <= rightmost(rowSt)) return false;
+
+    if (pos === LAST_POS && rowSt.crosses.length < CROSSES_TO_LOCK) return false;
+
+    if (isRowClosedFor(state, player, row)) {
+        // Simultaneous-lock exception: when someone else locked the row this
+        // roll, a player with 5+ crosses may still take the final number and
+        // the lock bonus. This stays open even once the second lock ends the
+        // game — that is exactly when simultaneous locks happen — and never
+        // adds a new locked row, since a closed row is already locked for all.
+        return pos === LAST_POS;
+    }
+
+    return !isGameOver(state);
+}
+
+export function cross(state, player, row, pos) {
+    if (!canCross(state, player, row, pos)) return state;
+
+    const next = structuredClone(state);
+    const rowSt = rowState(next, player, row);
+
+    rowSt.crosses.push(pos);
+
+    if (pos === LAST_POS) rowSt.locked = true;
+
+    return next;
+}
+
+/* Only the rightmost cross can be taken back (mistake correction). */
+export function canUncross(state, player, row, pos) {
+    return rightmost(rowState(state, player, row)) === pos && pos >= 0;
+}
+
+export function uncross(state, player, row, pos) {
+    if (!canUncross(state, player, row, pos)) return state;
+
+    const next = structuredClone(state);
+    const rowSt = rowState(next, player, row);
+
+    rowSt.crosses.pop();
+
+    if (pos === LAST_POS) rowSt.locked = false;
+
+    return next;
+}
+
+export function setPenalties(state, player, count) {
+    const next = structuredClone(state);
+
+    next.players[player].penalties = Math.max(0, Math.min(MAX_PENALTIES, count));
+
+    return next;
+}
+
+/* Toggle "a player off this device locked the row". No bonus mark. */
+export function toggleExternalClose(state, player, row) {
+    const next = structuredClone(state);
+    const rowSt = rowState(next, player, row);
+
+    rowSt.closed = !rowSt.closed;
+
+    return next;
+}
+
+/* Marks per color for one player: each crossed position contributes to its
+ * CELL's color; an earned lock adds one mark of the LOCK's color. This one
+ * rule scores classic, mixed-numbers, and mixed-colors sheets alike. */
+export function marksByColor(layout, playerState) {
+    const marks = Object.fromEntries(COLORS.map((c) => [c, 0]));
+
+    layout.rows.forEach((row, r) => {
+        const rowSt = playerState.rows[r];
+
+        for (const pos of rowSt.crosses) marks[row.cells[pos].c]++;
+
+        if (rowSt.locked) marks[row.lock]++;
+    });
+
+    return marks;
+}
+
+export function scoreByColor(layout, playerState) {
+    const marks = marksByColor(layout, playerState);
+
+    return Object.fromEntries(COLORS.map((c) => [c, SCORE_TABLE[marks[c]]]));
+}
+
+export function penaltyPoints(playerState) {
+    return playerState.penalties * PENALTY_POINTS;
+}
+
+export function total(layout, playerState) {
+    const scores = scoreByColor(layout, playerState);
+
+    return COLORS.reduce((sum, c) => sum + scores[c], 0) - penaltyPoints(playerState);
+}
