@@ -36,6 +36,13 @@ export function newGame(layoutId, mode) {
     };
 }
 
+/* JSON round-trip instead of structuredClone: the state is plain JSON data,
+ * and the UI hands us Alpine's reactive Proxy, which structuredClone
+ * refuses to clone. */
+function clone(state) {
+    return JSON.parse(JSON.stringify(state));
+}
+
 function rowState(state, player, row) {
     return state.players[player].rows[row];
 }
@@ -94,7 +101,7 @@ export function canCross(state, player, row, pos) {
 export function cross(state, player, row, pos) {
     if (!canCross(state, player, row, pos)) return state;
 
-    const next = structuredClone(state);
+    const next = clone(state);
     const rowSt = rowState(next, player, row);
 
     rowSt.crosses.push(pos);
@@ -112,7 +119,7 @@ export function canUncross(state, player, row, pos) {
 export function uncross(state, player, row, pos) {
     if (!canUncross(state, player, row, pos)) return state;
 
-    const next = structuredClone(state);
+    const next = clone(state);
     const rowSt = rowState(next, player, row);
 
     rowSt.crosses.pop();
@@ -123,7 +130,7 @@ export function uncross(state, player, row, pos) {
 }
 
 export function setPenalties(state, player, count) {
-    const next = structuredClone(state);
+    const next = clone(state);
 
     next.players[player].penalties = Math.max(0, Math.min(MAX_PENALTIES, count));
 
@@ -132,7 +139,7 @@ export function setPenalties(state, player, count) {
 
 /* Toggle "a player off this device locked the row". No bonus mark. */
 export function toggleExternalClose(state, player, row) {
-    const next = structuredClone(state);
+    const next = clone(state);
     const rowSt = rowState(next, player, row);
 
     rowSt.closed = !rowSt.closed;

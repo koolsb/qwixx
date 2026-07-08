@@ -259,6 +259,33 @@ describe('game over', () => {
     });
 });
 
+describe('reactive-proxy state (Alpine hands the engine a Proxy)', () => {
+    // Deep proxy, like Alpine's reactivity wrapper. structuredClone throws
+    // "Proxy object could not be cloned" on these — the engine must not care.
+    const reactive = (obj) =>
+        new Proxy(obj, {
+            get(target, key) {
+                const value = Reflect.get(target, key);
+
+                return typeof value === 'object' && value !== null ? reactive(value) : value;
+            },
+        });
+
+    it('crosses, uncrosses, and scores through a proxied state', () => {
+        let state = cross(reactive(newGame('classic', 'solo')), 0, 0, 3);
+
+        expect(state.players[0].rows[0].crosses).toEqual([3]);
+
+        state = toggleExternalClose(reactive(state), 0, 1);
+        state = setPenalties(reactive(state), 0, 1);
+        state = uncross(reactive(state), 0, 0, 3);
+
+        expect(state.players[0].rows[0].crosses).toEqual([]);
+        expect(state.players[0].rows[1].closed).toBe(true);
+        expect(total(classic, reactive(state).players[0])).toBe(-5);
+    });
+});
+
 describe('scoring', () => {
     it('uses the triangular score table', () => {
         expect(SCORE_TABLE).toEqual([0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78]);
