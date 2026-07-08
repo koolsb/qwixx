@@ -213,17 +213,6 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    /* Light/dark toggle backed by Flux's appearance handling (which also
-     * persists the choice in localStorage as flux.appearance). */
-    Alpine.data('qwixxAppearance', () => ({
-        dark: document.documentElement.classList.contains('dark'),
-
-        toggle() {
-            this.dark = !this.dark;
-            window.Flux?.applyAppearance(this.dark ? 'dark' : 'light');
-        },
-    }));
-
     /* Picker page: offers to resume the stored game, if any. */
     Alpine.data('qwixxResume', () => ({
         game: null,

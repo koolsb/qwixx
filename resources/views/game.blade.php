@@ -13,9 +13,9 @@
                     <span class="text-sm font-bold text-zinc-500 dark:text-zinc-400">{{ $layout->name }}</span>
 
                     <div class="flex items-center gap-1">
-                        <flux:button size="sm" variant="ghost" x-data="qwixxAppearance" x-on:click="toggle()" title="Light / dark mode">
-                            <flux:icon.sun class="size-4" x-show="!dark" x-cloak />
-                            <flux:icon.moon class="size-4" x-show="dark" x-cloak />
+                        <flux:button size="sm" variant="ghost" x-on:click="$flux.dark = ! $flux.dark" title="Light / dark mode">
+                            <flux:icon.sun class="size-4" x-show="! $flux.dark" x-cloak />
+                            <flux:icon.moon class="size-4" x-show="$flux.dark" x-cloak />
                         </flux:button>
                         <flux:button
                             size="sm"
@@ -47,9 +47,9 @@
                 <div class="flex items-center justify-center gap-2 border-y border-zinc-200 bg-white/60 px-4 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/60">
                     <flux:button href="{{ route('picker') }}" variant="ghost" size="sm" icon="arrow-left"></flux:button>
                     <span class="text-xs font-bold text-zinc-400">{{ $layout->name }} · 2 players</span>
-                    <flux:button size="sm" variant="ghost" x-data="qwixxAppearance" x-on:click="toggle()" title="Light / dark mode">
-                        <flux:icon.sun class="size-4" x-show="!dark" x-cloak />
-                        <flux:icon.moon class="size-4" x-show="dark" x-cloak />
+                    <flux:button size="sm" variant="ghost" x-on:click="$flux.dark = ! $flux.dark" title="Light / dark mode">
+                        <flux:icon.sun class="size-4" x-show="! $flux.dark" x-cloak />
+                        <flux:icon.moon class="size-4" x-show="$flux.dark" x-cloak />
                     </flux:button>
                     <flux:button size="sm" variant="ghost" x-show="wlSupported" x-on:click="wlToggle()">
                         <flux:icon.bolt class="size-4" x-show="wlEnabled" />
