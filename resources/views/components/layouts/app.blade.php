@@ -25,7 +25,7 @@
                         <flux:icon.sun class="size-4" x-show="! $flux.dark" x-cloak />
                         <flux:icon.moon class="size-4" x-show="$flux.dark" x-cloak />
                     </flux:button>
-                    <flux:button href="https://gamewright.com/product/Qwixx" target="_blank" variant="ghost" size="sm" class="text-white!">
+                    <flux:button href="https://gamewright.com/pdfs/Rules/QwixxTM-RULES.pdf" target="_blank" variant="ghost" size="sm" class="text-white!">
                         Rules
                     </flux:button>
                 </div>
