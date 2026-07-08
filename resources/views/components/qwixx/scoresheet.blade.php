@@ -21,17 +21,15 @@
     @endforeach
 
     <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-[calc(var(--qx-cell)*0.16)] pt-[calc(var(--qx-cell)*0.08)]">
-        @unless ($compact)
-            {{-- Points legend, as printed on the pad. --}}
-            <div class="flex items-stretch overflow-hidden rounded-md border border-zinc-300 text-center dark:border-zinc-600">
-                @foreach ([1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78] as $points)
-                    <div class="flex flex-col border-r border-zinc-300 px-[calc(var(--qx-cell)*0.09)] py-0.5 last:border-r-0 dark:border-zinc-600">
-                        <span class="text-[calc(var(--qx-cell)*0.17)] font-bold text-zinc-400">{{ $loop->iteration }}✕</span>
-                        <span class="text-[calc(var(--qx-cell)*0.2)] font-black text-zinc-600 dark:text-zinc-300">{{ $points }}</span>
-                    </div>
-                @endforeach
-            </div>
-        @endunless
+        {{-- Points legend, as printed on the pad. --}}
+        <div class="flex items-stretch overflow-hidden rounded-md border border-zinc-300 text-center dark:border-zinc-600">
+            @foreach ([1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78] as $points)
+                <div class="flex flex-col border-r border-zinc-300 px-[calc(var(--qx-cell)*0.09)] py-0.5 last:border-r-0 dark:border-zinc-600">
+                    <span class="text-[calc(var(--qx-cell)*0.17)] font-bold text-zinc-400">{{ $loop->iteration }}✕</span>
+                    <span class="text-[calc(var(--qx-cell)*0.2)] font-black text-zinc-600 dark:text-zinc-300">{{ $points }}</span>
+                </div>
+            @endforeach
+        </div>
 
         <x-qwixx.penalties :player-index="$p" />
     </div>
