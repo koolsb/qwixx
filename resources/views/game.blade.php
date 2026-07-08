@@ -27,6 +27,17 @@
                             <flux:icon.bolt class="size-4" x-show="wlEnabled" />
                             <flux:icon.bolt-slash class="size-4" x-show="!wlEnabled" x-cloak />
                         </flux:button>
+                        <flux:button
+                            size="sm"
+                            variant="ghost"
+                            x-show="fsSupported"
+                            x-cloak
+                            x-on:click="fsToggle()"
+                            x-bind:title="fsActive ? 'Exit full screen' : 'Full screen'"
+                        >
+                            <flux:icon.arrows-pointing-out class="size-4" x-show="!fsActive" />
+                            <flux:icon.arrows-pointing-in class="size-4" x-show="fsActive" x-cloak />
+                        </flux:button>
                         <flux:modal.trigger name="reset-confirm">
                             <flux:button size="sm" variant="ghost" icon="arrow-path">Reset</flux:button>
                         </flux:modal.trigger>
@@ -54,6 +65,10 @@
                     <flux:button size="sm" variant="ghost" x-show="wlSupported" x-on:click="wlToggle()">
                         <flux:icon.bolt class="size-4" x-show="wlEnabled" />
                         <flux:icon.bolt-slash class="size-4" x-show="!wlEnabled" x-cloak />
+                    </flux:button>
+                    <flux:button size="sm" variant="ghost" x-show="fsSupported" x-cloak x-on:click="fsToggle()">
+                        <flux:icon.arrows-pointing-out class="size-4" x-show="!fsActive" />
+                        <flux:icon.arrows-pointing-in class="size-4" x-show="fsActive" x-cloak />
                     </flux:button>
                     <flux:modal.trigger name="reset-confirm">
                         <flux:button size="sm" variant="ghost" icon="arrow-path"></flux:button>

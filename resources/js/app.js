@@ -47,6 +47,11 @@ document.addEventListener('alpine:init', () => {
         wlEnabled: true,
         wlSupported: 'wakeLock' in navigator,
 
+        fsActive: false,
+        // iPadOS supports element fullscreen (webkit-prefixed before 16.4);
+        // iPhones don't, so the button hides itself there.
+        fsSupported: document.fullscreenEnabled || document.webkitFullscreenEnabled || false,
+
         init() {
             const stored = loadJson(GAME_KEY);
             this.state = isValidGame(stored, layout.id, mode) ? stored : engine.newGame(layout.id, mode);
@@ -69,6 +74,27 @@ document.addEventListener('alpine:init', () => {
                 },
                 { once: true },
             );
+
+            for (const event of ['fullscreenchange', 'webkitfullscreenchange']) {
+                document.addEventListener(event, () => {
+                    this.fsActive = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                });
+            }
+        },
+
+        async fsToggle() {
+            const doc = document;
+            const el = doc.documentElement;
+
+            try {
+                if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+                    await (doc.exitFullscreen?.() ?? doc.webkitExitFullscreen?.());
+                } else {
+                    await (el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.());
+                }
+            } catch {
+                // Some browsers refuse (e.g. iPhone Safari) — leave state as is.
+            }
         },
 
         save() {
