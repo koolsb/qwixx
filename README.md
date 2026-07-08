@@ -1,58 +1,110 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Qwixx Scoresheets
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A digital scoresheet for the [Qwixx](https://gamewright.com/product/Qwixx) dice game.
+Replaces the paper pad: tap numbers to cross them out, the left-to-right rule is
+enforced automatically, scores tally live, and the game announces when it's over.
+A hard refresh (or a crashed tab) restores the sheet exactly as it was.
 
-## About Laravel
+Built with **Laravel 13 · Flux UI Pro · Tailwind 4 · Alpine.js**. No database, no
+login — the game runs entirely client-side and persists to `localStorage`; Laravel
+serves the shell and the layout library.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Three sheet layouts** (Classic, Mixed Numbers, Mixed Colors), selectable from the
+  picker. Layouts are pure config — see below to add more.
+- **Rules enforced**: crosses go left to right; skipped cells are struck out; the
+  final cell needs 5 crosses and earns the lock + bonus mark; tapping your most
+  recent cross undoes it (mistake correction).
+- **Two modes**:
+  - **Solo** — one sheet, sized for iPad/phone landscape, for playing along with a
+    physical game.
+  - **2 players** — both sheets on one iPad lying flat between the players, the top
+    sheet rotated 180°. Locking a row locks it for the other player automatically.
+- **Rows locked elsewhere**: the small circled button at a row's end marks a row
+  locked by a player on paper. Per the rules' simultaneous-lock clause, a player
+  with 5+ crosses can still take the final cell of a freshly locked row.
+- **Game over** banner when two rows are locked or four penalties are taken.
+- **Screen wake lock** on by default (toggleable) so the iPad doesn't sleep mid-game.
+- **Reset** with a confirmation dialog.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## How it works
 
-## Learning Laravel
+- **Layouts** live in [`config/qwixx.php`](config/qwixx.php); `LayoutFactory`
+  validates them at load (4 rows, permutations of 2–12, each color owning exactly
+  11 cells and one lock) and `LayoutLibrary` exposes them. The game page embeds the
+  layout as JSON for the client.
+- **Rules engine** is pure JavaScript in
+  [`resources/js/engine.js`](resources/js/engine.js) — state transitions, guards,
+  scoring, game-over detection. Scoring always groups marks by *cell color*, which
+  makes classic and mixed-color sheets score identically by construction.
+- **UI glue** is Alpine.js in [`resources/js/app.js`](resources/js/app.js): taps call
+  the engine, every mutation is saved to `localStorage` (`qwixx.game.v1`), and the
+  sheet re-renders from derived state.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Adding a layout
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Add an entry to `config/qwixx.php` and redeploy. Rows come in two shapes:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```php
+['color' => 'red', 'numbers' => [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]]   // solid row
+['lock' => 'red', 'cells' => [[2, 'yellow'], [3, 'blue'], /* ... */]]   // per-cell colors
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Validation fails loudly on boot if a layout is malformed.
 
-## Contributing
+## Local development
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Flux Pro is a licensed package — configure the credentials once:
 
-## Code of Conduct
+```bash
+composer config http-basic.composer.fluxui.dev "<flux-username>" "<flux-license-key>"
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Then:
 
-## Security Vulnerabilities
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+composer run dev          # serve + vite
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Open http://localhost:8000.
 
-## License
+### Tests & formatting
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan test          # Pest (layout domain + pages)
+npm run test              # Vitest (rules engine)
+vendor/bin/pint           # format
+```
+
+## Deployment
+
+Push to `main` →
+
+1. **CI** (`.github/workflows/ci.yml`) runs Vitest + Pest + Pint.
+2. **Build** (`.github/workflows/docker-publish.yml`) builds a multi-arch FrankenPHP
+   image and pushes `ghcr.io/koolsb/qwixx:main`.
+3. In the **kools-k3s** GitOps repo, `argocd-image-updater` bumps the digest and
+   ArgoCD deploys via the shared `charts/laravel` Helm chart.
+
+### Required GitHub repo secrets
+
+| Secret | Used by |
+| --- | --- |
+| `FLUX_USERNAME` | CI + image build (Flux Pro) |
+| `FLUX_LICENSE_KEY` | CI + image build (Flux Pro) |
+
+`GITHUB_TOKEN` (automatic) is used to push to GHCR.
+
+### Cluster (kools-k3s repo)
+
+Mirror the phase10 setup: manifests at `apps/qwixx/` (values) and
+`apps/templates/qwixx.yaml` (the ArgoCD Application). Set the hostname, seal
+`APP_KEY` and a GHCR pull secret, then flip `qwixx.enabled: true`.
+
+The container serves on **:8080** (non-root), exposes `/health.php` for probes, and
+needs **no PVC and no database** — game state lives in each device's browser.
