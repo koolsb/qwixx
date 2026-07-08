@@ -9,7 +9,7 @@
     @for ($i = 0; $i < 4; $i++)
         <button
             type="button"
-            class="qx-cell h-[calc(var(--qx-cell)*0.72)]! w-[calc(var(--qx-cell)*0.72)]! border-2 border-zinc-300 bg-white dark:border-zinc-600 dark:bg-zinc-800"
+            class="qx-cell h-[calc(var(--qx-cell)*0.72)]! w-[calc(var(--qx-cell)*0.72)]! border-2 border-zinc-300 bg-white dark:border-zinc-500"
             x-bind:class="{ 'qx-crossed': penaltyCount({{ $p }}) > {{ $i }} }"
             x-on:click="togglePenalty({{ $p }}, {{ $i }})"
         ></button>

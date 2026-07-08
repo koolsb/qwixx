@@ -20,9 +20,15 @@
                     </span>
                     <span class="hidden text-sm font-medium text-white/70 sm:inline">Scoresheets</span>
                 </a>
-                <flux:button href="https://gamewright.com/product/Qwixx" target="_blank" variant="ghost" size="sm" class="text-white!">
-                    Rules
-                </flux:button>
+                <div class="flex items-center gap-1">
+                    <flux:button variant="ghost" size="sm" class="text-white!" x-data="qwixxAppearance" x-on:click="toggle()" title="Light / dark mode">
+                        <flux:icon.sun class="size-4" x-show="!dark" x-cloak />
+                        <flux:icon.moon class="size-4" x-show="dark" x-cloak />
+                    </flux:button>
+                    <flux:button href="https://gamewright.com/product/Qwixx" target="_blank" variant="ghost" size="sm" class="text-white!">
+                        Rules
+                    </flux:button>
+                </div>
             </div>
             <div class="qwixx-stripe h-1.5 w-full"></div>
         </header>
