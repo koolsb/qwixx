@@ -81,10 +81,5 @@ jobs:
         if: always()
         run: rm -f auth.json
 
-      - name: Generate artifact attestation
-        if: github.event_name != 'pull_request'
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+      # No artifact attestation here (unlike phase10): GitHub doesn't support
+      # attestations on user-owned private repositories.
