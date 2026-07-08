@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        <title>{{ $title ?? config('app.name', 'Qwixx') }}</title>
+
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @fluxAppearance
+        @livewireStyles
+    </head>
+    <body class="min-h-full bg-zinc-50 text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-200">
+        <header class="bg-zinc-900 text-white">
+            <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+                <a href="{{ route('picker') }}" class="flex items-center gap-3">
+                    <span class="text-2xl font-black tracking-tight">
+                        Qwi<span class="text-qwixx-red">x</span><span class="text-qwixx-blue">x</span>
+                    </span>
+                    <span class="hidden text-sm font-medium text-white/70 sm:inline">Scoresheets</span>
+                </a>
+                <flux:button href="https://gamewright.com/product/Qwixx" target="_blank" variant="ghost" size="sm" class="text-white!">
+                    Rules
+                </flux:button>
+            </div>
+            <div class="qwixx-stripe h-1.5 w-full"></div>
+        </header>
+
+        <main class="mx-auto max-w-5xl px-6 py-8">
+            {{ $slot }}
+        </main>
+
+        @livewireScripts
+        @fluxScripts
+    </body>
+</html>

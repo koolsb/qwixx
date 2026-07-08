@@ -1,9 +1,145 @@
 @import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+[x-cloak] {
+    display: none !important;
+}
+
+/*
+| Qwixx brand palette — the four dice colors from the physical sheet,
+| each with a pale "cell" tint used inside the color bands.
+*/
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-qwixx-red: #cf3a3a;
+    --color-qwixx-red-cell: #f3dcda;
+    --color-qwixx-yellow: #eda723;
+    --color-qwixx-yellow-cell: #faeed2;
+    --color-qwixx-green: #2e8f4c;
+    --color-qwixx-green-cell: #dcebdd;
+    --color-qwixx-blue: #33539f;
+    --color-qwixx-blue-cell: #dde3f2;
+
+    --color-accent: var(--color-qwixx-blue);
+    --color-accent-content: var(--color-qwixx-blue);
+    --color-accent-foreground: var(--color-white);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: #3b82f6;
+        --color-accent-content: #93c5fd;
+        --color-accent-foreground: var(--color-white);
+    }
+}
+
+/* The four-color stripe used in the header, one slice per dice color. */
+@utility qwixx-stripe {
+    background: linear-gradient(
+        90deg,
+        var(--color-qwixx-red) 0% 25%,
+        var(--color-qwixx-yellow) 25% 50%,
+        var(--color-qwixx-green) 50% 75%,
+        var(--color-qwixx-blue) 75% 100%
+    );
+}
+
+/*
+| Scoresheet cells. Size flows from one custom property so the duo screen
+| can compress both sheets onto a single iPad viewport.
+*/
+@layer components {
+    .qx-sheet {
+        --qx-cell: clamp(2rem, min(6.5vw, 9dvh), 3.4rem);
+    }
+
+    .qx-sheet.qx-compact {
+        --qx-cell: clamp(1.55rem, min(6.2vw, 4.6dvh), 2.6rem);
+    }
+
+    /* A colored segment of a row band; adjacent same-color segments read
+       as one continuous band, which reproduces both the classic solid rows
+       and the scattered mixed-colors bands. */
+    .qx-seg {
+        padding: calc(var(--qx-cell) * 0.09);
+    }
+
+    .qx-cell {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--qx-cell);
+        height: var(--qx-cell);
+        border-radius: calc(var(--qx-cell) * 0.22);
+        font-size: calc(var(--qx-cell) * 0.5);
+        font-weight: 900;
+        line-height: 1;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+    }
+
+    .qx-seg-red { background: var(--color-qwixx-red); }
+    .qx-seg-yellow { background: var(--color-qwixx-yellow); }
+    .qx-seg-green { background: var(--color-qwixx-green); }
+    .qx-seg-blue { background: var(--color-qwixx-blue); }
+
+    .qx-red { background: var(--color-qwixx-red-cell); color: var(--color-qwixx-red); }
+    .qx-yellow { background: var(--color-qwixx-yellow-cell); color: var(--color-qwixx-yellow); }
+    .qx-green { background: var(--color-qwixx-green-cell); color: var(--color-qwixx-green); }
+    .qx-blue { background: var(--color-qwixx-blue-cell); color: var(--color-qwixx-blue); }
+
+    /* Crossed out: a bold X over the number. */
+    .qx-crossed::after {
+        content: '✕';
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: calc(var(--qx-cell) * 0.82);
+        font-weight: 900;
+        color: rgb(39 39 42 / 0.85);
+    }
+
+    /* Skipped: the rulebook tip's small horizontal line, plus dimming. */
+    .qx-skipped {
+        opacity: 0.45;
+    }
+
+    .qx-skipped::after {
+        content: '';
+        position: absolute;
+        left: 18%;
+        right: 18%;
+        top: 50%;
+        height: calc(var(--qx-cell) * 0.06);
+        border-radius: 9999px;
+        background: rgb(39 39 42 / 0.55);
+    }
+
+    /* Unreachable cells (closed row, game over, lock gate). */
+    .qx-muted {
+        opacity: 0.4;
+    }
+
+    /* The final cell when it is takeable right now. */
+    .qx-lockable {
+        box-shadow: 0 0 0 calc(var(--qx-cell) * 0.06) rgb(255 255 255 / 0.9) inset;
+        animation: qx-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes qx-pulse {
+        50% { transform: scale(1.07); }
+    }
 }
