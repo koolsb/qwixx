@@ -62,8 +62,14 @@
         --qx-cell: clamp(2rem, min(6.5vw, 9dvh), 3.4rem);
     }
 
+    /* Duo: both sheets share the height, so width (6.2vw) or the split
+       height (4.6dvh) is the real limit — whichever is smaller. The upper
+       bound is set for tablets: 2.6rem capped the cell far below what an
+       iPad's width and height allow, leaving both duo sheets small with
+       large empty margins. 4rem lets the cell grow to fill the iPad while
+       still bounding it on very large displays. */
     .qx-sheet.qx-compact {
-        --qx-cell: clamp(1.55rem, min(6.2vw, 4.6dvh), 2.6rem);
+        --qx-cell: clamp(1.55rem, min(6.2vw, 4.6dvh), 4rem);
     }
 
     /* A colored segment of a row band; adjacent same-color segments read
