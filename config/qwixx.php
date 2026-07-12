@@ -44,7 +44,7 @@ return [
 
         'mixed-colors' => [
             'name' => 'Mixed Colors',
-            'description' => 'Numbers run in order but colors are scattered. Totals tally each color across the whole sheet.',
+            'description' => 'Numbers run in order but colors are scattered. Each row still scores on its own count of marks.',
             'rows' => [
                 ['lock' => 'red', 'cells' => [
                     [2, 'yellow'], [3, 'yellow'], [4, 'yellow'],

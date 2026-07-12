@@ -147,27 +147,29 @@ export function toggleExternalClose(state, player, row) {
     return next;
 }
 
-/* Marks per color for one player: each crossed position contributes to its
- * CELL's color; an earned lock adds one mark of the LOCK's color. This one
- * rule scores classic, mixed-numbers, and mixed-colors sheets alike. */
-export function marksByColor(layout, playerState) {
-    const marks = Object.fromEntries(COLORS.map((c) => [c, 0]));
-
-    layout.rows.forEach((row, r) => {
+/* Marks in each row for one player: the crossed cells plus the earned lock's
+ * bonus mark. Qwixx scores by ROW — how many marks a row holds — regardless
+ * of the individual cell colors, which only decide which die may fill a cell.
+ * This one rule scores classic, mixed-numbers, and mixed-colors sheets alike. */
+export function marksByRow(layout, playerState) {
+    return layout.rows.map((_row, r) => {
         const rowSt = playerState.rows[r];
 
-        for (const pos of rowSt.crosses) marks[row.cells[pos].c]++;
-
-        if (rowSt.locked) marks[row.lock]++;
+        return rowSt.crosses.length + (rowSt.locked ? 1 : 0);
     });
-
-    return marks;
 }
 
-export function scoreByColor(layout, playerState) {
-    const marks = marksByColor(layout, playerState);
+export function scoreByRow(layout, playerState) {
+    return marksByRow(layout, playerState).map((marks) => SCORE_TABLE[marks]);
+}
 
-    return Object.fromEntries(COLORS.map((c) => [c, SCORE_TABLE[marks[c]]]));
+/* The same row scores, keyed by each row's lock color, for the totals strip.
+ * Every layout locks its four rows in four distinct colors, so this is just a
+ * 1:1 relabelling of scoreByRow. */
+export function scoresByLockColor(layout, playerState) {
+    const rowScores = scoreByRow(layout, playerState);
+
+    return Object.fromEntries(layout.rows.map((row, r) => [row.lock, rowScores[r]]));
 }
 
 export function penaltyPoints(playerState) {
@@ -175,7 +177,5 @@ export function penaltyPoints(playerState) {
 }
 
 export function total(layout, playerState) {
-    const scores = scoreByColor(layout, playerState);
-
-    return COLORS.reduce((sum, c) => sum + scores[c], 0) - penaltyPoints(playerState);
+    return scoreByRow(layout, playerState).reduce((sum, score) => sum + score, 0) - penaltyPoints(playerState);
 }

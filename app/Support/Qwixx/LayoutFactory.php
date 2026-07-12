@@ -83,8 +83,9 @@ final class LayoutFactory
     }
 
     /**
-     * Every color must own exactly 11 cells and exactly one lock, or the
-     * per-color score table would not apply.
+     * A well-formed sheet gives every color exactly 11 cells and exactly one
+     * lock. One lock per color means the four rows lock in four distinct
+     * colors, so the totals strip can label each row's score by its lock.
      *
      * @param  list<Row>  $rows
      */
