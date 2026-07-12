@@ -7,10 +7,11 @@ import {
     isGameOver,
     isRowClosedFor,
     lockedRowCount,
-    marksByColor,
+    marksByRow,
     newGame,
     penaltyPoints,
-    scoreByColor,
+    scoreByRow,
+    scoresByLockColor,
     setPenalties,
     toggleExternalClose,
     total,
@@ -92,7 +93,7 @@ describe('locking a row', () => {
         const row = state.players[0].rows[0];
 
         expect(row.locked).toBe(true);
-        expect(marksByColor(classic, state.players[0]).red).toBe(7); // 6 crosses + lock
+        expect(marksByRow(classic, state.players[0])[0]).toBe(7); // 6 crosses + lock
         expect(lockedRowCount(state)).toBe(1);
     });
 
@@ -129,7 +130,7 @@ describe('external close (physical player locked the row)', () => {
 
         expect(isRowClosedFor(state, 0, 0)).toBe(true);
         expect(canCross(state, 0, 0, 5)).toBe(false);
-        expect(marksByColor(classic, state.players[0]).red).toBe(3);
+        expect(marksByRow(classic, state.players[0])[0]).toBe(3);
         expect(lockedRowCount(state)).toBe(1);
     });
 
@@ -151,7 +152,7 @@ describe('simultaneous-lock exception', () => {
 
         state = cross(state, 0, 0, 10);
         expect(state.players[0].rows[0].locked).toBe(true);
-        expect(marksByColor(classic, state.players[0]).red).toBe(7);
+        expect(marksByRow(classic, state.players[0])[0]).toBe(7);
     });
 
     it('still requires five crosses in the closed row', () => {
@@ -171,7 +172,7 @@ describe('simultaneous-lock exception', () => {
         expect(canCross(state, 1, 0, 10)).toBe(true);
 
         state = cross(state, 1, 0, 10);
-        expect(marksByColor(classic, state.players[1]).red).toBe(7);
+        expect(marksByRow(classic, state.players[1])[0]).toBe(7);
         expect(lockedRowCount(state)).toBe(1); // same row, counted once
     });
 
@@ -197,7 +198,7 @@ describe('duo shared locks', () => {
 
         expect(isRowClosedFor(state, 1, 2)).toBe(true);
         expect(canCross(state, 1, 2, 3)).toBe(false);
-        expect(marksByColor(classic, state.players[1]).green).toBe(0);
+        expect(marksByRow(classic, state.players[1])[2]).toBe(0);
     });
 
     it('reopens the partner row when the lock is uncrossed', () => {
@@ -299,16 +300,23 @@ describe('scoring', () => {
         state = crossAll(state, 0, 3, [0, 1, 2, 3, 4, 5, 6]); // 7 blue -> 28
         state = setPenalties(state, 0, 2);
 
-        expect(scoreByColor(classic, state.players[0])).toEqual({ red: 10, yellow: 6, green: 36, blue: 28 });
+        expect(scoreByRow(classic, state.players[0])).toEqual([10, 6, 36, 28]);
+        // The totals strip labels each row's score by its lock color.
+        expect(scoresByLockColor(classic, state.players[0])).toEqual({ red: 10, yellow: 6, green: 36, blue: 28 });
         expect(total(classic, state.players[0])).toBe(70);
     });
 
-    it('tallies mixed-colors cells into per-cell color buckets and locks into the lock color', () => {
+    it('scores a mixed-colors row by its mark count, not by cell color', () => {
         let state = newGame('mixed-colors', 'solo');
         // Row 0: positions 0-2 yellow, 3-5 blue, 6-8 green, 9-10 red, red lock.
+        // Six crosses plus the red lock earned at position 10 = 7 marks in the
+        // one row. Scoring by cell color would instead scatter these into
+        // yellow/blue/green/red buckets and score far lower — that was the bug.
         state = crossAll(state, 0, 0, [0, 1, 3, 6, 9, 10]);
 
-        const marks = marksByColor(mixedColors, state.players[0]);
-        expect(marks).toEqual({ yellow: 2, blue: 1, green: 1, red: 3 }); // red: pos 9 + pos 10 + lock
+        expect(marksByRow(mixedColors, state.players[0])).toEqual([7, 0, 0, 0]);
+        expect(scoreByRow(mixedColors, state.players[0])).toEqual([SCORE_TABLE[7], 0, 0, 0]);
+        expect(scoresByLockColor(mixedColors, state.players[0]).red).toBe(28);
+        expect(total(mixedColors, state.players[0])).toBe(28);
     });
 });

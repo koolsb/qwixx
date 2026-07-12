@@ -183,7 +183,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         score(player, color) {
-            return engine.scoreByColor(layout, this.state.players[player])[color];
+            return engine.scoresByLockColor(layout, this.state.players[player])[color];
         },
 
         penaltyCount(player) {
